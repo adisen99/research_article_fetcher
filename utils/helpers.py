@@ -1,14 +1,29 @@
 # utils/helpers.py
-from fpdf import FPDF
-
-
 def format_markdown(grouped_by_group):
-    md = "# 🌍 Weekly Climate Research Digest\n\n"
+    md = "# 🌍 Monthly Climate Science Digest\n\n"
+    md += "📌 **Top 3 Highlights**\n\n"
+
+    # Collect top 3 articles by date across all sources
+    top3 = []
+    for group in grouped_by_group:
+        for source_name, bundle in grouped_by_group[group].items():
+            top3.extend(bundle["articles"])
+    top3.sort(key=lambda x: x.get("pub_dt"), reverse=True)
+    for art in top3[:3]:
+        md += f"### ⭐ [{art['title']}]({art['link']})\n"
+        if art["author"]:
+            md += f"👤 **Author**: {art['author']}\n"
+        if art["pub_dt"]:
+            md += f"🗓️ **Published**: {art['pub_dt'].strftime('%Y-%m-%d')}\n"
+        md += f"📰 **Source**: {art.get('source_name','Unknown')}\n"
+        md += f"{art['summary']}\n\n"
+
+    # Now list the rest grouped by journal/blog
     for group in ["Journals 📚", "Blogs & News 📰", "Other ❓"]:
         if group in grouped_by_group:
             md += f"# {group}\n\n"
             for source_name, bundle in sorted(grouped_by_group[group].items()):
-                md += f"## {source_name}\n"
+                md += f"## 🏛️ {source_name}\n"
                 if bundle["url"]:
                     md += f"🔗 Feed: {bundle['url']}\n\n"
                 for art in bundle["articles"]:
@@ -19,19 +34,3 @@ def format_markdown(grouped_by_group):
                         md += f"🗓️ **Published**: {art['pub_dt'].strftime('%Y-%m-%d')}\n"
                     md += f"{art['summary']}\n\n"
     return md
-
-
-def save_pdf(markdown_text, filepath):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_auto_page_break(auto=True, margin=15)
-    pdf.set_font("Helvetica", size=12)
-
-    for line in markdown_text.split("\n"):
-        clean_line = line.encode("latin-1", "replace").decode("latin-1")
-        if clean_line.strip():
-            pdf.multi_cell(0, 10, clean_line)
-        else:
-            pdf.ln()
-
-    pdf.output(str(filepath))
