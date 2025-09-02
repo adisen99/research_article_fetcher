@@ -1,0 +1,4 @@
+feedparser>=6.0.8
+sumy>=0.10.0
+fpdf>=1.7.2
+nltk>=3.8.0
